@@ -1,4 +1,4 @@
-# Attach troubleshooting tools to running Kubernetes/OpenShift pods
+# Attach troubleshooting tools to running Kubernetes and OpenShift pods
 
 
 
