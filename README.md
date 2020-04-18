@@ -71,7 +71,7 @@ exit
 ## Limitations
 
 * User must be permitted to create privileged containers.
-* While *kube-debug-pod* will work on any Kubernetes cluster, instructions for attaching to target container namespaces are provided for CRI-O based clusters only.
+* While *kube-debug-pod* will work on any Kubernetes cluster, instructions for attaching to target container namespaces are provided for CRI-O based clusters only. This should be resolved in one of the future versions of *kube-debug-pod*.
 
 ## References
 
