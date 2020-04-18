@@ -27,7 +27,7 @@ $ cp bin/kube-debug-pod /usr/local/bin
 
 ## Usage
 
-See the built-in help:
+Check out the built-in help:
 
 ```
 $ kube-debug-pod -h
