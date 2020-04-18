@@ -4,13 +4,13 @@
 
 ## How does it work?
 
-Troubleshooting a running pod using *kube-debug-pod* can be divided into the following steps:
+The process of troubleshooting a running pod can be divided into the following steps:
 
 1. *kube-debug-pod* creates a privileged pod using a user-supplied container image. This debug pod is placed on the same cluster node where the target pod is running.
-2. Attach user's terminal to the debug pod.
-3. Instruct the user how to join the Linux namespaces (*uts*, *ipc*, *net*, *pid*, and *cgroup*) of the target container.
-4. User can run any troubleshooting tools enjoying a direct access to the processes running in the target container.
-5. After the user is finished with troubleshooting, *kube-debug-pod* deletes the debug pod.
+2. *kube-debug-pod* attaches user's terminal to the debug pod.
+3. User can join the Linux namespaces (*uts*, *ipc*, *net*, *pid*, and *cgroup*) of the target container.
+4. User can run troubleshooting tools located on his/her container image, enjoying a direct access to the processes running in the target container.
+5. After the user is finished with troubleshooting, *kube-debug-pod* cleans up the debug pod.
 
 ## Installing kube-debug-pod
 
