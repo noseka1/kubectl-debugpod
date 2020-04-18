@@ -12,6 +12,8 @@ The process of troubleshooting a running pod using *kube-debug-pod* can be divid
 4. User runs troubleshooting tools located on his/her container image, enjoying direct access to the processes running in the target container.
 5. After the user is finished with troubleshooting, the debug pod is deleted.
 
+![Diagram](docs/kube_debug_pod_diagram.svg "Diagram")
+
 ## Installing kube-debug-pod
 
 Golang >= 1.13 is required. Build *kube-debug-pod* using the command:
