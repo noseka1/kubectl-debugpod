@@ -68,9 +68,10 @@ exit
 2020/04/18 13:43:39 Removing debug pod ...
 ```
 
-Limitations:
+## Limitations
 
-* Tool works best with CRI-O runtime.
+* User must be permitted to create privileged containers.
+* While *kube-debug-pod* will work on any Kubernetes cluster, instructions for attaching to target container namespaces are provided for CRI-O based clusters only.
 
 ## References
 
