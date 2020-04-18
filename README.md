@@ -4,7 +4,7 @@
 
 ## How does it work?
 
-The process of troubleshooting a running pod can be divided into the following steps:
+The process of troubleshooting a running pod using *kube-debug-pod* can be divided into the following steps:
 
 1. *kube-debug-pod* creates a privileged pod using a user-supplied container image. This debug pod is placed on the same cluster node where the target pod is running.
 2. *kube-debug-pod* attaches user's terminal to the debug pod.
