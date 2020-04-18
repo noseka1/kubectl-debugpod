@@ -75,6 +75,8 @@ exit
 
 ## References
 
+Kubernetes feature [Ephemeral Containers](https://github.com/kubernetes/enhancements/issues/277).
+
 Similar projects:
 
 * [aylei/kubectl-debug](https://github.com/aylei/kubectl-debug)
