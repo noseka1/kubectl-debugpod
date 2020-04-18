@@ -31,17 +31,17 @@ Check out the built-in help:
 
 ```
 $ kube-debug-pod -h
-Complete documentation is available at https://github.com/noseka1/kube-debug-pod
+kube-debug-pod, complete documentation is available at https://github.com/noseka1/kube-debug-pod
 
 Usage:
   kube-debug-pod POD [flags]
 
 Flags:
-  -c, --container string   Debug container name; defaults to first container in pod
+  -c, --container string   Target container name; defaults to first container in pod
   -h, --help               help for kube-debug-pod
       --image string       Image used by the debug pod. (default "centos")
-      --init-container     Debug an init container; defaults to false
-  -n, --namespace string   Debug pod in namespace
+      --init-container     Target is an init container; defaults to false
+  -n, --namespace string   Target namespace
 ```
 
 The following sample session demonstrates attaching to an `apiserver-7484t` pod that is running in the `openshift-apiserver` namespace:
