@@ -34,10 +34,10 @@ Flags:
   -n, --namespace string   Debug pod in namespace
 ```
 
-Sample sesstion, attaching to a `apiserver-7484t pod that is running in the `openshift-apiserver`:
+Sample sesstion, attaching to a `apiserver-7484t` pod that is running in the `openshift-apiserver`:
 
 ```
-kube-debug-pod apiserver-7484t --namespace openshift-apiserver 
+$ kube-debug-pod apiserver-7484t --namespace openshift-apiserver
 2020/04/18 13:41:07 Starting pod/apiserver-7484t-debug-4ysar on node ip-10-0-157-32.us-west-2.compute.internal using image centos ...
 2020/04/18 13:41:18 Welcome to the debug pod. Please, run the following commands to join the namespaces of the target container:
 2020/04/18 13:41:18 PID=$(chroot /rootfs crictl inspect fefdc3d0b43074284217c26470cbc3ad9a9543cfab28ab60545c7f439cf8eafc | sed --quiet --expression 's/"pid": \([[:digit:]]\+\).*/\1/p')
