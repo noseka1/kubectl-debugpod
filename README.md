@@ -70,12 +70,14 @@ exit
 
 ## Tools image requirements
 
-You tools image can contain degugging/troubleshooting tools of your choice. In addition to that, make sure that you include the following utilities in you image as well:
+Your tools image can contain degugging/troubleshooting tools of your choice. In addition to that, make sure that you include the following utilities in your image as well:
 
 * `/bin/sh`
 * `chroot`
 * `nsenter`
 * `mount`
+
+There are many tools images available out there. If you are troubleshooting on OpenShift, you can checkout my [openshift-toolbox](https://github.com/noseka1/openshift-toolbox) tools image.
 
 ## Limitations
 
