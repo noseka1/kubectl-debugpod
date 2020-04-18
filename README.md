@@ -68,6 +68,15 @@ exit
 2020/04/18 13:43:39 Removing debug pod ...
 ```
 
+## Tools image requirements
+
+You tools image can contain degugging/troubleshooting tools of your choice. In addition to that, make sure that you include the following utilities in you image as well:
+
+* `/bin/sh`
+* `chroot`
+* `nsenter`
+* `mount`
+
 ## Limitations
 
 * User must be permitted to create privileged containers.
