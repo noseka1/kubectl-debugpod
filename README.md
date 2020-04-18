@@ -2,7 +2,7 @@
 
 *kube-debug-pod* tool allows you to attach troubleshooting tools to running Kubernetes and/or OpenShift pods.
 
-## Installing *kube-debug-pod*
+## Installing kube-debug-pod
 
 Golang >= 1.13 is required. Build *kube-debug-pod* using the command:
 
