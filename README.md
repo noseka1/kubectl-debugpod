@@ -34,7 +34,7 @@ Flags:
   -n, --namespace string   Debug pod in namespace
 ```
 
-Sample sesstion, attaching to a `apiserver-7484t` pod that is running in the `openshift-apiserver`:
+Sample sesstion, attaching to a `apiserver-7484t` pod that is running in the `openshift-apiserver` namespace:
 
 ```
 $ kube-debug-pod apiserver-7484t --namespace openshift-apiserver
