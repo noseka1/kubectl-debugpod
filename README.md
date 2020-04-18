@@ -75,7 +75,7 @@ exit
 
 ## References
 
-Kubernetes feature [Ephemeral Containers](https://github.com/kubernetes/enhancements/issues/277).
+Kubernetes feature [Ephemeral Containers](https://github.com/kubernetes/enhancements/issues/277) is currently in development.
 
 Similar projects:
 
