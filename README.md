@@ -84,7 +84,7 @@ There are many tools images available out there. If you are troubleshooting on O
 ## Limitations
 
 * User must be permitted to create privileged containers.
-* While *kube-debug-pod* will work on any Kubernetes cluster, instructions for attaching to target container namespaces are provided for CRI-O based clusters only. This should be resolved in one of the future versions of *kube-debug-pod*.
+* _Works on the CRI-O based clusters only (containerd not supported at the moment)_. This will be resolved in the future versions of *kube-debug-pod*.
 
 ## References
 
