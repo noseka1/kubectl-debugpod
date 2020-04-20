@@ -84,7 +84,7 @@ There are many tools images available out there. If you are troubleshooting on O
 ## Limitations
 
 * User must be permitted to create privileged containers.
-* _Works on the CRI-O based clusters only (containerd not supported at the moment)_. This will be resolved in the future versions of *kube-debug-pod*.
+* **Works on the CRI-O based clusters only (containerd not supported at the moment)**. This will be resolved in the future versions of *kube-debug-pod*.
 
 ## References
 
