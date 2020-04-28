@@ -20,6 +20,64 @@ import (
 	"k8s.io/utils/pointer"
 )
 
+const debugPodScript = `
+set -o xtrace
+echo Script arguments: $@
+CRIID="$1"
+ROOTFS=/rootfs
+CRI_SOCKETS='
+/var/run/dockershim.sock
+/var/run/containerd/containerd.sock
+/var/run/crio/crio.sock
+'
+CRI_SOCKET=
+for S in $CRI_SOCKETS; do
+  if [ -r $ROOTFS/$S ]; then
+	CRI_SOCKET=$S
+	break
+  fi
+done
+if [ -z "$CRI_SOCKET" ]; then
+  echo Failed to locate CRI socket. Following locations were probed:
+  echo "$CRI_SOCKETS"
+  exit 1
+fi
+INDENT=$(
+  chroot $ROOTFS \
+    crictl \
+      --runtime-endpoint "$CRI_SOCKET" \
+	  inspect "$CRIID" \
+      --output yaml \
+  | sed --quiet --expression '/ \+/p' \
+  | sed --quiet --expression '1s/^\( \+\).*/\1/p'
+)
+PID=$(
+  chroot $ROOTFS \
+    crictl \
+      --runtime-endpoint "$CRI_SOCKET" \
+	  inspect "$CRIID" \
+      --output yaml \
+  | sed --quiet --expression "/^${INDENT}pid:.*/s/${INDENT}pid: \([[:digit:]]\+\)/\1/p"
+)
+if [ -z "$PID" ]; then
+  # assume dockershim runtime, cri id equals to docker container id
+  PID=$(chroot /rootfs docker inspect --format '{{.State.Pid}}' "$CRIID")
+fi
+if [ -z "$PID" ]; then
+  echo Failed to find the process PID for pod with CRIID=$CRIID
+  exit 1
+fi
+nsenter \
+  --uts \
+  --ipc \
+  --net \
+  --pid \
+  --cgroup \
+  --no-fork \
+  --target $PID \
+  /bin/sh -c 'mount -t proc proc /proc || true; exec /bin/sh'
+`
+
 type DebugCmdParams struct {
 	pod           string
 	namespace     string
@@ -106,12 +164,13 @@ func (cmd *DebugCmd) findContainerID(pod *corev1.Pod, container string, initCont
 	return "", fmt.Errorf("cannot find containerID for container %s (initContainer=%t)", container, initContainer)
 }
 
-func (cmd *DebugCmd) obtainCrioID(containerID string) (string, error) {
-	crioPrefix := "cri-o://"
-	if strings.HasPrefix(containerID, crioPrefix) {
-		return strings.TrimPrefix(containerID, crioPrefix), nil
+func (cmd *DebugCmd) obtainCriID(containerID string) (string, error) {
+	separator := "://"
+	containerIDSlice := strings.SplitN(containerID, separator, 2)
+	if len(containerIDSlice) == 2 {
+		return containerIDSlice[1], nil
 	}
-	return "", fmt.Errorf("found containerID %s with unknown container runtime prefix. Only CRI-O container runtime is supported at this time", containerID)
+	return "", fmt.Errorf("failed to parse containerID %s", containerID)
 }
 
 func (cmd *DebugCmd) generateDebugPodName(pod string) string {
@@ -140,7 +199,7 @@ func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, crioID
 				{
 					Name:    "debug",
 					Image:   image,
-					Command: []string{"/bin/sh"},
+					Command: []string{"/bin/sh", "-c", debugPodScript, "/bin/sh", crioID},
 					TTY:     true,
 					Stdin:   true,
 					SecurityContext: &corev1.SecurityContext{
@@ -257,12 +316,12 @@ func (cmd *DebugCmd) Execute() {
 		log.Fatal(err)
 	}
 
-	crioID, err := cmd.obtainCrioID(containerID)
+	criID, err := cmd.obtainCriID(containerID)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	debugPodManifest := cmd.prepareDebugPodManifest(pod.Spec.NodeName, pod.Name, crioID, cmd.params.image)
+	debugPodManifest := cmd.prepareDebugPodManifest(pod.Spec.NodeName, pod.Name, criID, cmd.params.image)
 
 	log.Printf("Starting pod/%s on node %s using image %s ...", debugPodManifest.ObjectMeta.Name, pod.Spec.NodeName, cmd.params.image)
 
@@ -275,11 +334,6 @@ func (cmd *DebugCmd) Execute() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	log.Print("Welcome to the debug pod. Please, run the following commands to join the namespaces of the target container:")
-	log.Printf("PID=$(chroot /rootfs crictl inspect %s | sed --quiet --expression 's/\"pid\": \\([[:digit:]]\\+\\).*/\\1/p')", crioID)
-	log.Printf("nsenter --uts --ipc --net --pid --cgroup --no-fork --target $PID")
-	log.Printf("mount -t proc proc /proc || true")
 
 	err = cmd.attachToPod(kubeClient, debugPod)
 	if err != nil {
