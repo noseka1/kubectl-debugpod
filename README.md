@@ -49,25 +49,18 @@ Flags:
 The following sample session demonstrates attaching to an `apiserver-7484t` pod that is running in the `openshift-apiserver` namespace:
 
 ```
-$ kube-debug-pod apiserver-7484t --namespace openshift-apiserver
-2020/04/18 13:41:07 Starting pod/apiserver-7484t-debug-4ysar on node ip-10-0-157-32.us-west-2.compute.internal using image centos ...
-2020/04/18 13:41:18 Welcome to the debug pod. Please, run the following commands to join the namespaces of the target container:
-2020/04/18 13:41:18 PID=$(chroot /rootfs crictl inspect fefdc3d0b43074284217c26470cbc3ad9a9543cfab28ab60545c7f439cf8eafc | sed --quiet --expression 's/"pid": \([[:digit:]]\+\).*/\1/p')
-2020/04/18 13:41:18 nsenter --uts --ipc --net --pid --cgroup --no-fork --target $PID
-2020/04/18 13:41:18 mount -t proc proc /proc || true
+$ kube-debug-pod apiserver-kbv54 --namespace openshift-apiserver
+2020/04/28 14:04:04 Starting pod/apiserver-kbv54-debug-4wsft on node ip-10-0-157-30.us-west-2.compute.internal using image centos ...
 If you don't see a command prompt, try pressing enter.
-sh-4.4# PID=$(chroot /rootfs crictl inspect fefdc3d0b43074284217c26470cbc3ad9a9543cfab28ab60545c7f439cf8eafc | sed --quiet --expression 's/"pid": \([[:digit:]]\+\).*/\1/p')
-sh-4.4# nsenter --uts --ipc --net --pid --cgroup --no-fork --target $PID
-[root@apiserver-7484t /]# mount -t proc proc /proc || true
-[root@apiserver-7484t /]# ps aux
+sh-4.4# hostname
+apiserver-kbv54
+sh-4.4# ps aux
 USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-root           1  0.7  1.4 991792 223548 ?       Ssl  Apr14  45:57 openshift-apiserver start --config=/var/run/configmaps/config/config.yaml -v=2
-root          35  0.0  0.0  43960  3384 pts/0    R+   20:41   0:00 ps aux
-[root@apiserver-7484t /]# exit
-logout
+root           1  0.7  1.3 791916 210568 ?       Ssl  Apr27  12:05 openshift-apiserver start --config=/var/run/configmaps/config/config.yaml
+root          34  0.0  0.0  43960  3436 pts/0    R+   21:04   0:00 ps aux
 sh-4.4# exit
 exit
-2020/04/18 13:43:39 Removing debug pod ...
+2020/04/28 14:05:05 Removing debug pod ...
 ```
 
 ## Tools image requirements
@@ -85,7 +78,11 @@ There are many tools images available out there. If you are troubleshooting on O
 ## Limitations
 
 * User must be permitted to create privileged containers.
-* **Works on the CRI-O based clusters only (containerd not supported at the moment)**. This will be resolved in the future versions of *kube-debug-pod*.
+* Following container runtimes are supported:
+  * CRI-O
+  * containerd
+  * dockershim
+  No further container runtimes are supported at this time.
 
 ## References
 
