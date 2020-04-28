@@ -78,6 +78,7 @@ Your tools image can contain degugging/troubleshooting tools of your choice. In 
 * `chroot`
 * `nsenter`
 * `mount`
+* `sed`
 
 There are many tools images available out there. If you are troubleshooting on OpenShift, you can checkout my [openshift-toolbox](https://github.com/noseka1/openshift-toolbox) tools image.
 
