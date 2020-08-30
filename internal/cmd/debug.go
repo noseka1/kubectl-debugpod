@@ -44,8 +44,9 @@ INDENT=$(
   chroot $ROOTFS \
     crictl \
       --runtime-endpoint "$CRI_SOCKET" \
-	  inspect "$CRI_ID" \
+	  inspect \
       --output yaml \
+     "$CRI_ID" \
   | sed --quiet --expression '/ \+/p' \
   | sed --quiet --expression '1s/^\( \+\).*/\1/p'
 )
@@ -53,8 +54,9 @@ PID=$(
   chroot $ROOTFS \
     crictl \
       --runtime-endpoint "$CRI_SOCKET" \
-	  inspect "$CRI_ID" \
+	  inspect \
       --output yaml \
+      "$CRI_ID" \
   | sed --quiet --expression "/^${INDENT}pid:.*/s/${INDENT}pid: \([[:digit:]]\+\)/\1/p"
 )
 if [ -z "$PID" ]; then
