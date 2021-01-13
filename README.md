@@ -63,6 +63,13 @@ exit
 2020/04/28 14:05:05 Removing debug pod ...
 ```
 
+## Configuration file
+
+*kube-debug-pod* can read the configuration from a file located at `~/.kube-debug-pod.yaml`. Sample configuration file:
+```
+image: quay.io/noseka1/openshift-toolbox:basic
+```
+
 ## Tools image requirements
 
 Your tools image can contain degugging/troubleshooting tools of your choice. In addition to that, make sure that you include the following utilities in your image as well:
