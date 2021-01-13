@@ -8,6 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"kube-debug-pod/internal/cmd/config"
+
+	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	kapierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,9 +24,9 @@ import (
 )
 
 var containerRuntimes = map[string]string{
-  "docker":     "unix:///var/run/dockershim.sock",
-  "containerd": "unix:///var/run/containerd/containerd.sock",
-  "cri-o":      "unix:///var/run/crio/crio.sock",
+	"docker":     "unix:///var/run/dockershim.sock",
+	"containerd": "unix:///var/run/containerd/containerd.sock",
+	"cri-o":      "unix:///var/run/crio/crio.sock",
 }
 
 const debugPodScript = `
@@ -309,7 +312,44 @@ func (cmd *DebugCmd) attachToPod(kubeClient kubernetes.Interface, pod *corev1.Po
 	})
 }
 
+func (cmd *DebugCmd) readConfiguration() error {
+
+	viper.SetConfigName(".kube-debug-pod")
+	viper.SetConfigType("yaml")
+
+	tmp, exists := os.LookupEnv("HOME")
+	if exists && tmp != "" {
+		viper.AddConfigPath(tmp)
+	}
+	viper.AddConfigPath(".")
+
+	var configuration config.Configuration
+
+	// Read the config file if it exists
+	err := viper.ReadInConfig()
+	if err == nil {
+		err = viper.Unmarshal(&configuration)
+		if err != nil {
+			return err
+		}
+		if cmd.params.image == "" {
+			if configuration.Image != "" {
+				cmd.params.image = configuration.Image
+			}
+		}
+	}
+	if cmd.params.image == "" {
+		cmd.params.image = "centos"
+	}
+	return nil
+}
+
 func (cmd *DebugCmd) Execute() {
+
+	err := cmd.readConfiguration()
+	if err != nil {
+		log.Fatalf("Failed to read the configuration. %s", err)
+	}
 
 	kubeConfig := cmd.kubeConfig()
 

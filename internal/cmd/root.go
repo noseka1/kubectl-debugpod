@@ -21,6 +21,6 @@ func RootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().StringVarP(&params.namespace, "namespace", "n", "", "Target namespace")
 	rootCmd.PersistentFlags().StringVarP(&params.container, "container", "c", "", "Target container name; defaults to first container in pod")
 	rootCmd.PersistentFlags().BoolVarP(&params.initContainer, "init-container", "", false, "Target is an init container; defaults to false")
-	rootCmd.PersistentFlags().StringVarP(&params.image, "image", "", "centos", "Image used by the debug pod.")
+	rootCmd.PersistentFlags().StringVarP(&params.image, "image", "", "", "Image used by the debug pod.")
 	return rootCmd
 }
