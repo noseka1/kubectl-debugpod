@@ -390,7 +390,7 @@ func (cmd *DebugCmd) Execute() {
 
 	debugPodManifest := cmd.prepareDebugPodManifest(pod.Spec.NodeName, pod.Name, criProvider, criID, criSocket, cmd.params.image)
 
-	log.Printf("Starting pod/%s on node %s using image %s ...", debugPodManifest.ObjectMeta.Name, pod.Spec.NodeName, cmd.params.image)
+	log.Printf("Starting pod %s on node %s using image %s ...", debugPodManifest.ObjectMeta.Name, pod.Spec.NodeName, cmd.params.image)
 
 	debugPod, err := kubeClient.CoreV1().Pods(currentNamespace).Create(debugPodManifest)
 	if err != nil {
