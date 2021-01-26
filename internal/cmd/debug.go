@@ -92,6 +92,10 @@ echo \$HOSTFS\$ROOT
 EOF
 chmod 755 /kube-debug-pod/print_root.sh
 
+# mount the target's container filesystem
+mkdir -p /target
+mount --bind $(/kube-debug-pod/print_root.sh) /target || true
+
 nsenter \
   --uts \
   --ipc \
