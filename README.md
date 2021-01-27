@@ -63,6 +63,11 @@ exit
 2020/04/28 14:05:05 Removing debug pod ...
 ```
 
+For convenience, *kube-debug-pod* comes with two mounts:
+
+* `/host` The root directory of the underlying Kubernetes node is mounted here.
+* `/target` The root directory of the target container is mounted here.
+
 ## Configuration file
 
 *kube-debug-pod* can read the configuration from a file located at `~/.kube-debug-pod.yaml`. Sample configuration file:
