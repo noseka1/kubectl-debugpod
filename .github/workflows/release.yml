@@ -1,3 +1,6 @@
+# Based on the code from:
+# https://brunopaz.dev/blog/building-a-basic-ci-cd-pipeline-for-a-golang-application-using-github-actions
+
 name: Release
 on:
   create:
