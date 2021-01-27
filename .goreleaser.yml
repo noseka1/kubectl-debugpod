@@ -1,0 +1,6 @@
+# See also https://goreleaser.com/customization/build/
+
+builds:
+    # Path to main.go file or main package.
+    # Default is `.`.
+    main: ./cmd/kube-debug-pod/main.go
