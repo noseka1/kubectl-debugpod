@@ -4,7 +4,7 @@ builds:
   -
     # Path to main.go file or main package.
     # Default is `.`.
-    main: ./cmd/kube-debug-pod/main.go
+    main: ./cmd/kubectl-debugpod/main.go
 
     env:
       - CGO_ENABLED=0
