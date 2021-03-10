@@ -1,22 +1,22 @@
-# kube-debug-pod
+# kubectl-debugpod
 
-*kube-debug-pod* tool allows you to attach troubleshooting tools to running Kubernetes and/or OpenShift pods.
+*kubectl-debugpod* tool allows you to attach troubleshooting tools to running Kubernetes and/or OpenShift pods.
 
 ## How does it work?
 
-The process of troubleshooting a running pod using *kube-debug-pod* can be divided into the following steps:
+The process of troubleshooting a running pod using *kubectl-debugpod* can be divided into the following steps:
 
-1. *kube-debug-pod* creates a privileged pod using a user-supplied container image. This debug pod is placed on the same cluster node where the target pod is running.
+1. *kubectl-debugpod* creates a privileged pod using a user-supplied container image. This debug pod is placed on the same cluster node where the target pod is running.
 2. User's terminal is attached to the debug pod.
 3. The shell running in the debug pod joins the Linux namespaces (*uts*, *ipc*, *net*, *pid*, and *cgroup*) of the target container.
 4. User runs troubleshooting tools located on his/her container image, enjoying direct access to the processes running in the target container.
 5. After the user is finished with troubleshooting, the debug pod is deleted.
 
-![Diagram](docs/kube_debug_pod_diagram.svg "Diagram")
+![Diagram](docs/kubectl_debugpod_diagram.svg "Diagram")
 
-## Installing kube-debug-pod
+## Installing kubectl-debugpod
 
-Golang >= 1.13 is required. Build *kube-debug-pod* using the command:
+Golang >= 1.13 is required. Build *kubectl-debugpod* using the command:
 
 ```
 $ make build
@@ -24,7 +24,7 @@ $ make build
 Copy the resulting binary to your $PATH:
 
 ```
-$ cp bin/kube-debug-pod /usr/local/bin
+$ cp bin/kubectl-debugpod /usr/local/bin
 ```
 
 ## Usage
@@ -32,15 +32,15 @@ $ cp bin/kube-debug-pod /usr/local/bin
 Check out the built-in help:
 
 ```
-$ kube-debug-pod -h
-kube-debug-pod, complete documentation is available at https://github.com/noseka1/kube-debug-pod
+$ kubectl-debugpod -h
+kubectl-debugpod, complete documentation is available at https://github.com/noseka1/kubectl-debugpod
 
 Usage:
-  kube-debug-pod POD [flags]
+  kubectl-debugpod POD [flags]
 
 Flags:
   -c, --container string   Target container name; defaults to first container in pod
-  -h, --help               help for kube-debug-pod
+  -h, --help               help for kubectl-debugpod
       --image string       Image used by the debug pod. (default "centos")
       --init-container     Target is an init container; defaults to false
   -n, --namespace string   Target namespace
@@ -49,7 +49,7 @@ Flags:
 The following sample session demonstrates attaching to an `apiserver-7484t` pod that is running in the `openshift-apiserver` namespace:
 
 ```
-$ kube-debug-pod apiserver-kbv54 --namespace openshift-apiserver
+$ kubectl-debugpod apiserver-kbv54 --namespace openshift-apiserver
 2020/04/28 14:04:04 Starting pod/apiserver-kbv54-debug-4wsft on node ip-10-0-157-30.us-west-2.compute.internal using image centos ...
 If you don't see a command prompt, try pressing enter.
 sh-4.4# hostname
@@ -63,14 +63,14 @@ exit
 2020/04/28 14:05:05 Removing debug pod ...
 ```
 
-For convenience, *kube-debug-pod* comes with two mounts:
+For convenience, *kubectl-debugpod* comes with two mounts:
 
 * `/host` The root directory of the underlying Kubernetes node is mounted here.
 * `/target` The root directory of the target container is mounted here.
 
 ## Configuration file
 
-*kube-debug-pod* can read the configuration from a file located at `~/.kube-debug-pod.yaml`. Sample configuration file:
+*kubectl-debugpod* can read the configuration from a file located at `~/.kubectl-debugpod.yaml`. Sample configuration file:
 ```
 image: quay.io/noseka1/openshift-toolbox:basic
 ```

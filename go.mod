@@ -1,4 +1,4 @@
-module kube-debug-pod
+module kubectl-debugpod
 
 go 1.13
 

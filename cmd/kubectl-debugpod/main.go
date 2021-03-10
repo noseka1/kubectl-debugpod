@@ -1,7 +1,7 @@
 package main
 
 import (
-	"kube-debug-pod/internal/cmd"
+	"kubectl-debugpod/internal/cmd"
 )
 
 func main() {

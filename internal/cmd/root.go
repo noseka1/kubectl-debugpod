@@ -9,9 +9,9 @@ func RootCmd() *cobra.Command {
 	params := DebugCmdParams{}
 
 	var rootCmd = &cobra.Command{
-		Use:   "kube-debug-pod POD",
+		Use:   "kubectl-debugpod POD",
 		Short: "Attach troubleshooting tools to running Kubernetes/OpenShift pods",
-		Long:  `kube-debug-pod, complete documentation is available at https://github.com/noseka1/kube-debug-pod`,
+		Long:  `kubectl-debugpod, complete documentation is available at https://github.com/noseka1/kubectl-debugpod`,
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			params.pod = args[0]

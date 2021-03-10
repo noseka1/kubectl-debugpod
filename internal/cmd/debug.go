@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"kube-debug-pod/internal/cmd/config"
+	"kubectl-debugpod/internal/cmd/config"
 
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
@@ -71,8 +71,8 @@ if [ -z "$PID" ]; then
   exit 1
 fi
 
-mkdir -p /kube-debug-pod
-cat >/kube-debug-pod/print_root.sh <<EOF
+mkdir -p /kubectl-debugpod
+cat >/kubectl-debugpod/print_root.sh <<EOF
 #!/bin/sh
 HOSTFS=$HOSTFS
 CRI_ID=$CRI_ID
@@ -90,11 +90,11 @@ if [ -z "\$ROOT" -o ! -d "\$HOSTFS\$ROOT" ]; then
 fi
 echo \$HOSTFS\$ROOT
 EOF
-chmod 755 /kube-debug-pod/print_root.sh
+chmod 755 /kubectl-debugpod/print_root.sh
 
 # mount the target's container filesystem
 mkdir -p /target
-mount --bind $(/kube-debug-pod/print_root.sh) /target || true
+mount --bind $(/kubectl-debugpod/print_root.sh) /target || true
 
 nsenter \
   --uts \
@@ -318,7 +318,7 @@ func (cmd *DebugCmd) attachToPod(kubeClient kubernetes.Interface, pod *corev1.Po
 
 func (cmd *DebugCmd) readConfiguration() error {
 
-	viper.SetConfigName(".kube-debug-pod")
+	viper.SetConfigName(".kubectl-debugpod")
 	viper.SetConfigType("yaml")
 
 	tmp, exists := os.LookupEnv("HOME")

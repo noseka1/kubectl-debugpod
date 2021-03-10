@@ -1,4 +1,4 @@
-PROJECTNAME=kube-debug-pod
+PROJECTNAME=kubectl-debugpod
 GOBIN=./bin
 GOCMD=./cmd
 
