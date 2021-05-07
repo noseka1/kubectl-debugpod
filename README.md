@@ -77,7 +77,7 @@ image: quay.io/noseka1/openshift-toolbox:basic
 
 ## Tools image requirements
 
-Your tools image can contain degugging/troubleshooting tools of your choice. In addition to that, make sure that you include the following utilities in your image as well. These utilities are used by *kube-debud-pod* to initialize the environment with the container:
+Your tools image can contain debugging/troubleshooting tools of your choice. In addition to that, make sure that you include the following utilities in your image as well. These utilities are used by *kube-debud-pod* to initialize the environment with the container:
 
 * `/bin/sh`
 * `chroot`
