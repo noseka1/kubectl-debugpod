@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/rand"
@@ -259,7 +260,7 @@ func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, criPro
 }
 
 func (cmd *DebugCmd) waitForPodStart(kubeClient kubernetes.Interface, pod *corev1.Pod) (*corev1.Pod, error) {
-	watch, err := kubeClient.CoreV1().Pods(pod.ObjectMeta.Namespace).Watch(metav1.ListOptions{
+	watch, err := kubeClient.CoreV1().Pods(pod.ObjectMeta.Namespace).Watch(context.TODO(), metav1.ListOptions{
 		Watch:           true,
 		ResourceVersion: pod.ObjectMeta.ResourceVersion,
 		FieldSelector:   "metadata.name=" + pod.ObjectMeta.Name,
@@ -304,7 +305,7 @@ func (cmd *DebugCmd) attachToPod(kubeClient kubernetes.Interface, pod *corev1.Po
 	attachOptions.Stdin = true
 	attachOptions.InterruptParent = interrupt.New(func(os.Signal) { os.Exit(1) }, func() {
 		log.Printf("Removing debug pod ...")
-		err := kubeClient.CoreV1().Pods(pod.Namespace).Delete(pod.Name, metav1.NewDeleteOptions(0))
+		err := kubeClient.CoreV1().Pods(pod.Namespace).Delete(context.TODO(), pod.Name, *metav1.NewDeleteOptions(0))
 		if err != nil {
 			if !kapierrors.IsNotFound(err) {
 				log.Printf("Unable to delete the debug pod %s: %v", pod.Name, err)
@@ -372,7 +373,7 @@ func (cmd *DebugCmd) Execute() {
 		namespace = currentNamespace
 	}
 
-	pod, err := kubeClient.CoreV1().Pods(namespace).Get(cmd.params.pod, metav1.GetOptions{})
+	pod, err := kubeClient.CoreV1().Pods(namespace).Get(context.TODO(), cmd.params.pod, metav1.GetOptions{})
 	if err != nil {
 		log.Fatalf("Failed to find pod %s in namespace %s: %s", cmd.params.pod, namespace, err)
 	}
@@ -396,7 +397,7 @@ func (cmd *DebugCmd) Execute() {
 
 	log.Printf("Starting pod %s on node %s using image %s ...", debugPodManifest.ObjectMeta.Name, pod.Spec.NodeName, cmd.params.image)
 
-	debugPod, err := kubeClient.CoreV1().Pods(currentNamespace).Create(debugPodManifest)
+	debugPod, err := kubeClient.CoreV1().Pods(currentNamespace).Create(context.TODO(), debugPodManifest, metav1.CreateOptions{})
 	if err != nil {
 		log.Fatal(err)
 	}
