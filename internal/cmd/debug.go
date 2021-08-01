@@ -272,6 +272,10 @@ func (cmd *DebugCmd) waitForPodStart(kubeClient kubernetes.Interface, pod *corev
 		for {
 			select {
 			case events := <-watch.ResultChan():
+				if events.Object == nil {
+					watch.Stop()
+					return
+				}
 				pod = events.Object.(*corev1.Pod)
 				if pod.Status.Phase == corev1.PodRunning {
 					watch.Stop()
