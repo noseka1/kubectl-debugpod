@@ -90,7 +90,7 @@ There are many tools images available out there. If you are troubleshooting on O
 ## Limitations
 
 * User must be permitted to create privileged containers.
-* Following container runtimes are supported:
+* The following container runtimes are supported:
   * CRI-O
   * containerd
   * dockershim
