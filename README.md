@@ -72,7 +72,7 @@ For convenience, *kubectl-debugpod* comes with two mounts:
 
 *kubectl-debugpod* can read the configuration from a file located at `~/.kubectl-debugpod.yaml`. Sample configuration file:
 ```
-image: quay.io/noseka1/openshift-toolbox:basic
+image: quay.io/noseka1/toolbox-container:basic
 ```
 
 ## Tools image requirements
@@ -85,7 +85,7 @@ Your tools image can contain debugging/troubleshooting tools of your choice. In 
 * `mount`
 * `sed`
 
-There are many tools images available out there. If you are troubleshooting on OpenShift, you can checkout my [openshift-toolbox](https://github.com/noseka1/openshift-toolbox) tools image.
+There are many tools images available out there. If you are troubleshooting on OpenShift, you can checkout my [toolbox-container](https://github.com/noseka1/toolbox-container) tools image.
 
 ## Limitations
 
