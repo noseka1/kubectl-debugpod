@@ -1,4 +1,4 @@
-package config
+package cmd
 
 type Configuration struct {
 	Image string

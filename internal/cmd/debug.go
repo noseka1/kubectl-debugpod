@@ -9,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"kubectl-debugpod/internal/cmd/config"
-
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	kapierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -332,7 +330,7 @@ func (cmd *DebugCmd) readConfiguration() error {
 	}
 	viper.AddConfigPath(".")
 
-	var configuration config.Configuration
+	var configuration Configuration
 
 	// Read the config file if it exists
 	err := viper.ReadInConfig()
