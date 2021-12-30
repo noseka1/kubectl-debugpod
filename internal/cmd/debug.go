@@ -284,7 +284,7 @@ func (cmd *DebugCmd) readConfiguration() error {
 		}
 	}
 	if cmd.params.image == "" {
-		cmd.params.image = "centos"
+		cmd.params.image = "docker.io/centos:latest"
 	}
 	return nil
 }
