@@ -1,9 +1,11 @@
 #!/bin/sh
 
 set -o xtrace
+
 CRI_PROVIDER="$1"
 CRI_ID="$2"
 CRI_SOCKET="$3"
+shift 3
 HOSTFS=/host
 chroot $HOSTFS \
   crictl \
@@ -66,7 +68,10 @@ chmod 755 /kubectl-debugpod/print_root.sh
 mkdir -p /target
 mount --bind $(/kubectl-debugpod/print_root.sh) /target || true
 
-nsenter \
+declare -a exec_args
+exec_args=("$@")
+
+exec nsenter \
   --uts \
   --ipc \
   --net \
@@ -74,4 +79,4 @@ nsenter \
   --cgroup \
   --no-fork \
   --target $PID \
-  /bin/sh -c 'mount -t proc proc /proc || true; exec /bin/sh'
+  /bin/sh -c 'mount -t proc proc /proc || true; exec "$@"' /bin/sh "${exec_args[@]}"

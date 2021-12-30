@@ -9,13 +9,20 @@ func RootCmd() *cobra.Command {
 	params := DebugCmdParams{}
 
 	var rootCmd = &cobra.Command{
-		Use:   "kubectl-debugpod POD",
-		Short: "Attach troubleshooting tools to running Kubernetes/OpenShift pods",
-		Long:  `kubectl-debugpod, complete documentation is available at https://github.com/noseka1/kubectl-debugpod`,
-		Args:  cobra.ExactArgs(1),
+		Use:                   "kubectl-debugpod POD [flags] [-- COMMAND [args...]]",
+		Short:                 "Attach troubleshooting tools to running Kubernetes/OpenShift pods",
+		Long:                  `kubectl-debugpod, complete documentation is available at https://github.com/noseka1/kubectl-debugpod`,
+		DisableFlagsInUseLine: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			params.pod = args[0]
-			NewDebugCmd(params).Execute()
+			argsLenAtDash := cmd.ArgsLenAtDash()
+			var command []string
+			if argsLenAtDash > -1 {
+				command = args[argsLenAtDash:]
+			} else {
+				command = []string{"/bin/sh"}
+			}
+			NewDebugCmd(params, command).Execute()
 		},
 	}
 	rootCmd.PersistentFlags().StringVarP(&params.namespace, "namespace", "n", "", "Target namespace")

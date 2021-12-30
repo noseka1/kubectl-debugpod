@@ -41,10 +41,11 @@ type DebugCmdParams struct {
 
 type DebugCmd struct {
 	params     DebugCmdParams
+	command    []string
 	initScript string
 }
 
-func NewDebugCmd(params DebugCmdParams) *DebugCmd {
+func NewDebugCmd(params DebugCmdParams, command []string) *DebugCmd {
 	file, err := data.Assets.Open("init.sh")
 	if err != nil {
 		log.Fatalf("Failed to open the init script. %s", err)
@@ -56,6 +57,7 @@ func NewDebugCmd(params DebugCmdParams) *DebugCmd {
 	}
 	return &DebugCmd{
 		params:     params,
+		command:    command,
 		initScript: string(data),
 	}
 }
@@ -156,6 +158,7 @@ func (cmd *DebugCmd) generateDebugPodName(pod string) string {
 }
 
 func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, criProvider string, criID string, criSocket string, image string) *corev1.Pod {
+	command := append([]string{"/bin/sh", "-c", cmd.initScript, "/bin/sh", criProvider, criID, criSocket}, cmd.command...)
 	pod := &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -170,7 +173,7 @@ func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, criPro
 				{
 					Name:    "debug",
 					Image:   image,
-					Command: []string{"/bin/sh", "-c", cmd.initScript, "/bin/sh", criProvider, criID, criSocket},
+					Command: command,
 					TTY:     true,
 					Stdin:   true,
 					SecurityContext: &corev1.SecurityContext{
