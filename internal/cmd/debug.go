@@ -3,11 +3,14 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"os"
 	"strings"
 	"time"
+
+	"kubectl-debugpod/internal/data"
 
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
@@ -28,84 +31,6 @@ var containerRuntimes = map[string]string{
 	"cri-o":      "unix:///var/run/crio/crio.sock",
 }
 
-const debugPodScript = `
-set -o xtrace
-CRI_PROVIDER="$1"
-CRI_ID="$2"
-CRI_SOCKET="$3"
-HOSTFS=/host
-chroot $HOSTFS \
-  crictl \
-    --runtime-endpoint "$CRI_SOCKET" \
-	info
-if [ $? -ne 0 ]; then
-  echo Failed to communicate with container runtime using socket $CRI_SOCKET
-  exit 1
-fi
-INDENT=$(
-  chroot $HOSTFS \
-    crictl \
-      --runtime-endpoint "$CRI_SOCKET" \
-	  inspect \
-      --output yaml \
-     "$CRI_ID" \
-  | sed --quiet --expression '/ \+/p' \
-  | sed --quiet --expression '1s/^\( \+\).*/\1/p'
-)
-PID=$(
-  chroot $HOSTFS \
-    crictl \
-      --runtime-endpoint "$CRI_SOCKET" \
-	  inspect \
-      --output yaml \
-      "$CRI_ID" \
-  | sed --quiet --expression "/^${INDENT}pid:.*/s/${INDENT}pid: \([[:digit:]]\+\)/\1/p"
-)
-if [ -z "$PID" ]; then
-  # assume dockershim runtime, cri id equals to docker container id
-  PID=$(chroot $HOSTFS docker inspect --format '{{.State.Pid}}' "$CRI_ID")
-fi
-if [ -z "$PID" ]; then
-  echo Failed to find the process PID for pod with CRI_ID=$CRI_ID
-  exit 1
-fi
-
-mkdir -p /kubectl-debugpod
-cat >/kubectl-debugpod/print_root.sh <<EOF
-#!/bin/sh
-HOSTFS=$HOSTFS
-CRI_ID=$CRI_ID
-CRI_PROVIDER=$CRI_PROVIDER
-if [ \$CRI_PROVIDER = docker ]; then
-  ROOT=\$(chroot \$HOSTFS docker inspect --format '{{.GraphDriver.Data.MergedDir}}' "\$CRI_ID")
-elif [ \$CRI_PROVIDER = containerd ]; then
-  ROOT=/run/containerd/io.containerd.runtime.v1.linux/k8s.io/\$CRI_ID/rootfs
-elif [ \$CRI_PROVIDER = cri-o ]; then
-  ROOT=\$(chroot \$HOSTFS runc state \$CRI_ID | sed --quiet --expression 's/ \+"rootfs": "\(.*\)".*/\1/p')
-fi
-if [ -z "\$ROOT" -o ! -d "\$HOSTFS\$ROOT" ]; then
-  echo Failed to obtain the root directory
-  exit 1
-fi
-echo \$HOSTFS\$ROOT
-EOF
-chmod 755 /kubectl-debugpod/print_root.sh
-
-# mount the target's container filesystem
-mkdir -p /target
-mount --bind $(/kubectl-debugpod/print_root.sh) /target || true
-
-nsenter \
-  --uts \
-  --ipc \
-  --net \
-  --pid \
-  --cgroup \
-  --no-fork \
-  --target $PID \
-  /bin/sh -c 'mount -t proc proc /proc || true; exec /bin/sh'
-`
-
 type DebugCmdParams struct {
 	pod           string
 	namespace     string
@@ -115,11 +40,24 @@ type DebugCmdParams struct {
 }
 
 type DebugCmd struct {
-	params DebugCmdParams
+	params     DebugCmdParams
+	initScript string
 }
 
 func NewDebugCmd(params DebugCmdParams) *DebugCmd {
-	return &DebugCmd{params}
+	file, err := data.Assets.Open("init.sh")
+	if err != nil {
+		log.Fatalf("Failed to open the init script. %s", err)
+	}
+	defer file.Close()
+	data, err := io.ReadAll(file)
+	if err != nil {
+		log.Fatalf("Failed to read the init script. %s", err)
+	}
+	return &DebugCmd{
+		params:     params,
+		initScript: string(data),
+	}
 }
 
 func (cmd *DebugCmd) kubeConfig() clientcmd.ClientConfig {
@@ -232,7 +170,7 @@ func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, criPro
 				{
 					Name:    "debug",
 					Image:   image,
-					Command: []string{"/bin/sh", "-c", debugPodScript, "/bin/sh", criProvider, criID, criSocket},
+					Command: []string{"/bin/sh", "-c", cmd.initScript, "/bin/sh", criProvider, criID, criSocket},
 					TTY:     true,
 					Stdin:   true,
 					SecurityContext: &corev1.SecurityContext{

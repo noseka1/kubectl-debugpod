@@ -10,7 +10,10 @@ clean:
 mod:
 	  go mod download
 
-build:
+generate:
+	  go generate ./internal/data
+
+build: generate
 	  go build -o $(GOBIN)/$(PROJECTNAME) $(GOCMD)/$(PROJECTNAME)/main.go
 
 build_static: export CGO_ENABLED=0
