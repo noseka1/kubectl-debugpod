@@ -350,7 +350,8 @@ func (cmd *DebugCmd) Execute() {
 		log.Fatal(err)
 	}
 
-	log.Print("To use host binaries, run 'nsenter --mount --target 1'")
+	log.Print("Filesystem of the target container is accessible at /proc/1/root. " +
+		"You can also inspect this file system using 'nsenter --mount --target 1'")
 
 	err = cmd.attachToPod(kubeClient, debugPod)
 	if err != nil {
