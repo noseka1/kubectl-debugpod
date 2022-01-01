@@ -22,6 +22,7 @@ func RootCmd() *cobra.Command {
 		Short:                 "Attach troubleshooting tools to running Kubernetes/OpenShift pods",
 		Long:                  `kubectl-debugpod, complete documentation is available at https://github.com/noseka1/kubectl-debugpod`,
 		Example:               usageExample,
+		Args:                  cobra.MinimumNArgs(1),
 		DisableFlagsInUseLine: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			params.pod = args[0]
