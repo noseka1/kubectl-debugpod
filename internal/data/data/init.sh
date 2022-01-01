@@ -77,6 +77,5 @@ exec nsenter \
   --net \
   --pid \
   --cgroup \
-  --no-fork \
   --target $pid \
   /bin/sh -c 'mount -t proc proc /proc || true; exec "$@"' /bin/sh "${exec_args[@]}"
