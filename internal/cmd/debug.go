@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"kubectl-debugpod/internal/data"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	"kubectl-debugpod/internal/data"
+	"k8s.io/client-go/transport/spdy"
 
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
@@ -19,6 +21,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/portforward"
 	"k8s.io/kubectl/pkg/cmd/exec"
 	kcmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/polymorphichelpers"
@@ -33,13 +36,15 @@ var containerRuntimes = map[string]string{
 }
 
 type DebugCmdParams struct {
-	pod           string
-	namespace     string
-	container     string
-	initContainer bool
-	image         string
-	stdin         bool
-	tty           bool
+	pod            string
+	namespace      string
+	container      string
+	initContainer  bool
+	image          string
+	stdin          bool
+	tty            bool
+	forwardAddress []string
+	forwardPort    []string
 }
 
 type DebugCmd struct {
@@ -234,6 +239,45 @@ func (cmd *DebugCmd) waitForPodStart(kubeClient kubernetes.Interface, pod *corev
 	return pod, nil
 }
 
+func (cmd *DebugCmd) forwardPortToPod(pod *corev1.Pod) error {
+	if len(cmd.params.forwardPort) == 0 {
+		return nil
+	}
+
+	kubeConfigFlags := genericclioptions.NewConfigFlags(true)
+	matchVersionKubeConfigFlags := kcmdutil.NewMatchVersionFlags(kubeConfigFlags)
+	f := kcmdutil.NewFactory(matchVersionKubeConfigFlags)
+	config, err := f.ToRESTConfig()
+	if err != nil {
+		return err
+	}
+
+	restClient, err := f.RESTClient()
+	if err != nil {
+		return err
+	}
+
+	req := restClient.Post().
+		Resource("pods").
+		Namespace(pod.GetNamespace()).
+		Name(pod.GetName()).
+		SubResource("portforward")
+
+	transport, upgrader, err := spdy.RoundTripperFor(config)
+	if err != nil {
+		return err
+	}
+	stopChannel := make(chan struct{})
+	readyChannel := make(chan struct{})
+	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, "POST", req.URL())
+	fw, err := portforward.NewOnAddresses(dialer, cmd.params.forwardAddress, cmd.params.forwardPort, stopChannel, readyChannel, os.Stdout, os.Stderr)
+	if err != nil {
+		return err
+	}
+	go fw.ForwardPorts()
+	return nil
+}
+
 func (cmd *DebugCmd) attachToPod(kubeClient kubernetes.Interface, pod *corev1.Pod, criProvider string, criID string, criSocket string) error {
 	kubeConfigFlags := genericclioptions.NewConfigFlags(true)
 	matchVersionKubeConfigFlags := kcmdutil.NewMatchVersionFlags(kubeConfigFlags)
@@ -367,6 +411,11 @@ func (cmd *DebugCmd) Execute() {
 
 	log.Print("Filesystem of the target container is accessible at /proc/1/root. " +
 		"You can also inspect this file system using 'nsenter --mount --target 1'")
+
+	err = cmd.forwardPortToPod(pod)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	err = cmd.attachToPod(kubeClient, debugPod, criProvider, criID, criSocket)
 	if err != nil {

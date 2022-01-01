@@ -42,5 +42,7 @@ func RootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().StringVarP(&params.image, "image", "", "", "Image used by the debug pod.")
 	rootCmd.Flags().BoolVarP(&params.stdin, "stdin", "i", params.stdin, "Pass stdin to the container")
 	rootCmd.Flags().BoolVarP(&params.tty, "tty", "t", params.tty, "Stdin is a TTY")
+	rootCmd.Flags().StringSliceVar(&params.forwardAddress, "forward-address", []string{"localhost"}, "Addresses to listen on (comma separated). Only accepts IP addresses or localhost as a value. When localhost is supplied, kubectl-debugpod will try to bind on both 127.0.0.1 and ::1 and will fail if neither of these addresses are available to bind.")
+	rootCmd.Flags().StringSliceVar(&params.forwardPort, "forward-port", []string{}, "Forward one or more local ports to the target pod. Comma separated list of port mappings.")
 	return rootCmd
 }
