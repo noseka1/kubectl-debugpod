@@ -38,6 +38,8 @@ type DebugCmdParams struct {
 	container     string
 	initContainer bool
 	image         string
+	stdin         bool
+	tty           bool
 }
 
 type DebugCmd struct {
@@ -174,8 +176,8 @@ func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, image 
 					Name:    "debug",
 					Image:   image,
 					Command: []string{"/bin/sh", "-c", "trap : TERM INT; sleep infinity & wait"},
-					TTY:     true,
-					Stdin:   true,
+					TTY:     cmd.params.tty,
+					Stdin:   cmd.params.stdin,
 					SecurityContext: &corev1.SecurityContext{
 						Privileged: pointer.BoolPtr(true),
 					},
@@ -249,8 +251,8 @@ func (cmd *DebugCmd) attachToPod(kubeClient kubernetes.Interface, pod *corev1.Po
 				Out:    os.Stdout,
 				ErrOut: os.Stderr,
 			},
-			TTY:   true,
-			Stdin: true,
+			TTY:   cmd.params.tty,
+			Stdin: cmd.params.stdin,
 		},
 		ResourceName:    pod.GetName(),
 		Command:         command,
