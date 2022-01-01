@@ -84,6 +84,7 @@ Your tools image can contain debugging/troubleshooting tools of your choice. In 
 * `nsenter`
 * `mount`
 * `sed`
+* `sleep`
 
 There are many tools images available out there. If you are troubleshooting on OpenShift, you can checkout my [toolbox-container](https://github.com/noseka1/toolbox-container) tools image.
 

@@ -19,8 +19,9 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/kubectl/pkg/cmd/attach"
+	"k8s.io/kubectl/pkg/cmd/exec"
 	kcmdutil "k8s.io/kubectl/pkg/cmd/util"
+	"k8s.io/kubectl/pkg/polymorphichelpers"
 	"k8s.io/kubectl/pkg/util/interrupt"
 	"k8s.io/utils/pointer"
 )
@@ -157,8 +158,7 @@ func (cmd *DebugCmd) generateDebugPodName(pod string) string {
 	return pod + "-debug-" + suffix.String()
 }
 
-func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, criProvider string, criID string, criSocket string, image string) *corev1.Pod {
-	command := append([]string{"/bin/sh", "-c", cmd.initScript, "/bin/sh", criProvider, criID, criSocket}, cmd.command...)
+func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, image string) *corev1.Pod {
 	pod := &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -173,7 +173,7 @@ func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, criPro
 				{
 					Name:    "debug",
 					Image:   image,
-					Command: command,
+					Command: []string{"/bin/sh", "-c", "trap : TERM INT; sleep infinity & wait"},
 					TTY:     true,
 					Stdin:   true,
 					SecurityContext: &corev1.SecurityContext{
@@ -232,7 +232,7 @@ func (cmd *DebugCmd) waitForPodStart(kubeClient kubernetes.Interface, pod *corev
 	return pod, nil
 }
 
-func (cmd *DebugCmd) attachToPod(kubeClient kubernetes.Interface, pod *corev1.Pod) error {
+func (cmd *DebugCmd) attachToPod(kubeClient kubernetes.Interface, pod *corev1.Pod, criProvider string, criID string, criSocket string) error {
 	kubeConfigFlags := genericclioptions.NewConfigFlags(true)
 	matchVersionKubeConfigFlags := kcmdutil.NewMatchVersionFlags(kubeConfigFlags)
 	f := kcmdutil.NewFactory(matchVersionKubeConfigFlags)
@@ -240,13 +240,26 @@ func (cmd *DebugCmd) attachToPod(kubeClient kubernetes.Interface, pod *corev1.Po
 	if err != nil {
 		return err
 	}
-	ioStreams := genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
-	attachOptions := attach.NewAttachOptions(ioStreams)
-	attachOptions.Config = config
-	attachOptions.Pod = pod
-	attachOptions.TTY = true
-	attachOptions.Stdin = true
-	attachOptions.InterruptParent = interrupt.New(func(os.Signal) { os.Exit(1) }, func() {
+	command := append([]string{"/bin/sh", "-c", cmd.initScript, "/bin/sh", criProvider, criID, criSocket}, cmd.command...)
+	execOptions := &exec.ExecOptions{
+		StreamOptions: exec.StreamOptions{
+			Namespace: pod.GetNamespace(),
+			IOStreams: genericclioptions.IOStreams{
+				In:     os.Stdin,
+				Out:    os.Stdout,
+				ErrOut: os.Stderr,
+			},
+			TTY:   true,
+			Stdin: true,
+		},
+		ResourceName:    pod.GetName(),
+		Command:         command,
+		Builder:         f.NewBuilder,
+		ExecutablePodFn: polymorphichelpers.AttachablePodForObjectFn,
+		Executor:        &exec.DefaultRemoteExecutor{},
+		Config:          config,
+	}
+	execOptions.InterruptParent = interrupt.New(func(os.Signal) { os.Exit(1) }, func() {
 		log.Printf("Removing debug pod ...")
 		err := kubeClient.CoreV1().Pods(pod.Namespace).Delete(context.TODO(), pod.Name, *metav1.NewDeleteOptions(0))
 		if err != nil {
@@ -255,8 +268,8 @@ func (cmd *DebugCmd) attachToPod(kubeClient kubernetes.Interface, pod *corev1.Po
 			}
 		}
 	})
-	return attachOptions.InterruptParent.Run(func() error {
-		return attachOptions.Run()
+	return execOptions.InterruptParent.Run(func() error {
+		return execOptions.Run()
 	})
 }
 
@@ -336,7 +349,7 @@ func (cmd *DebugCmd) Execute() {
 		log.Fatal(err)
 	}
 
-	debugPodManifest := cmd.prepareDebugPodManifest(pod.Spec.NodeName, pod.Name, criProvider, criID, criSocket, cmd.params.image)
+	debugPodManifest := cmd.prepareDebugPodManifest(pod.Spec.NodeName, pod.Name, cmd.params.image)
 
 	log.Printf("Starting pod %s on node %s using image %s ...", debugPodManifest.ObjectMeta.Name, pod.Spec.NodeName, cmd.params.image)
 
@@ -353,7 +366,7 @@ func (cmd *DebugCmd) Execute() {
 	log.Print("Filesystem of the target container is accessible at /proc/1/root. " +
 		"You can also inspect this file system using 'nsenter --mount --target 1'")
 
-	err = cmd.attachToPod(kubeClient, debugPod)
+	err = cmd.attachToPod(kubeClient, debugPod, criProvider, criID, criSocket)
 	if err != nil {
 		log.Fatal(err)
 	}
