@@ -59,7 +59,7 @@ Flags:
   -t, --tty                       Stdin is a TTY
 ```
 
-The following sample session demonstrates attaching to an `apiserver-7484t` pod that is running in the `openshift-apiserver` namespace:
+The following sample session demonstrates attaching to an `apiserver-c45b4454d-vlfmf` pod that is running in the `openshift-apiserver` namespace:
 
 ```
 $ kubectl-debugpod -ti -n openshift-apiserver apiserver-c45b4454d-vlfmf -c openshift-apiserver
