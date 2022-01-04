@@ -14,7 +14,7 @@ The process of troubleshooting a running pod using *kubectl-debugpod* can be div
 
 ![Diagram](docs/kubectl_debugpod_diagram.svg "Diagram")
 
-## Building kubectl-debugpod
+## Building kubectl-debugpod (optional)
 
 Golang >= 1.15 is required. Build *kubectl-debugpod* using the command:
 
