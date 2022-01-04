@@ -1,6 +1,7 @@
 #!/bin/sh
 
-set -o xtrace
+# Uncomment for troubleshooting
+#set -o xtrace
 
 cri_provider="$1"
 cri_id="$2"
