@@ -11,7 +11,8 @@ hostfs=/host
 chroot $hostfs \
   crictl \
     --runtime-endpoint "$cri_socket" \
-    info
+    info \
+  1>/dev/null
 if [ $? -ne 0 ]; then
   echo Failed to communicate with container runtime using socket $cri_socket
   exit 1
