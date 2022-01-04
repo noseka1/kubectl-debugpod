@@ -1,5 +1,9 @@
 # See also https://goreleaser.com/customization/build/
 
+before:
+  hooks:
+    - go generate ./...
+
 builds:
   -
     # Path to main.go file or main package.
