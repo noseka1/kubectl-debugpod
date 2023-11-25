@@ -6,7 +6,6 @@ import (
 	"io"
 	"kubectl-debugpod/internal/data"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -154,17 +153,6 @@ func (cmd *DebugCmd) parseContainerID(containerID string) (string, string, strin
 	return "", "", "", fmt.Errorf("failed to parse containerID %s", containerID)
 }
 
-func (cmd *DebugCmd) generateDebugPodName(pod string) string {
-	rand.Seed(time.Now().UnixNano())
-	chars := []rune("abcdefghijklmnopqrstuvwxyz" + "0123456789")
-	length := 5
-	var suffix strings.Builder
-	for i := 0; i < length; i++ {
-		suffix.WriteRune(chars[rand.Intn(len(chars))])
-	}
-	return pod + "-debug-" + suffix.String()
-}
-
 func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, image string) *corev1.Pod {
 	pod := &corev1.Pod{
 		TypeMeta: metav1.TypeMeta{
@@ -172,7 +160,7 @@ func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, image 
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: cmd.generateDebugPodName(podName),
+			GenerateName: podName + "-debug-",
 		},
 		Spec: corev1.PodSpec{
 			NodeName: node,
@@ -397,7 +385,7 @@ func (cmd *DebugCmd) Execute() {
 
 	debugPodManifest := cmd.prepareDebugPodManifest(pod.Spec.NodeName, pod.Name, cmd.params.image)
 
-	log.Printf("Starting pod %s on node %s using image %s ...", debugPodManifest.ObjectMeta.Name, pod.Spec.NodeName, cmd.params.image)
+	log.Printf("Starting pod on node %s using image %s ...", pod.Spec.NodeName, cmd.params.image)
 
 	debugPod, err := kubeClient.CoreV1().Pods(currentNamespace).Create(context.TODO(), debugPodManifest, metav1.CreateOptions{})
 	if err != nil {
