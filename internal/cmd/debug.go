@@ -25,6 +25,7 @@ import (
 	kcmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/polymorphichelpers"
 	"k8s.io/kubectl/pkg/util/interrupt"
+	psaapi "k8s.io/pod-security-admission/api"
 	"k8s.io/utils/pointer"
 )
 
@@ -151,6 +152,21 @@ func (cmd *DebugCmd) parseContainerID(containerID string) (string, string, strin
 		return "", "", "", fmt.Errorf("unsupported container runtime: %s", containerID)
 	}
 	return "", "", "", fmt.Errorf("failed to parse containerID %s", containerID)
+}
+
+func (cmd *DebugCmd) prepareTemporaryNamespaceManifest() *corev1.Namespace {
+	ns := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "kubectl-debugpod-",
+			Labels: map[string]string{
+				psaapi.EnforceLevelLabel:                         string(psaapi.LevelPrivileged),
+				psaapi.AuditLevelLabel:                           string(psaapi.LevelPrivileged),
+				psaapi.WarnLevelLabel:                            string(psaapi.LevelPrivileged),
+				"security.openshift.io/scc.podSecurityLabelSync": "false",
+			},
+		},
+	}
+	return ns
 }
 
 func (cmd *DebugCmd) prepareDebugPodManifest(node string, podName string, image string) *corev1.Pod {
@@ -301,6 +317,13 @@ func (cmd *DebugCmd) attachToPod(kubeClient kubernetes.Interface, pod *corev1.Po
 				log.Printf("Unable to delete the debug pod %s: %v", pod.Name, err)
 			}
 		}
+		err = kubeClient.CoreV1().Namespaces().Delete(context.TODO(), pod.Namespace, metav1.DeleteOptions{})
+		if err != nil {
+			if !kapierrors.IsNotFound(err) {
+				log.Printf("Unable to delete the temporary namespace %s: %v", pod.Namespace, err)
+			}
+
+		}
 	})
 	return execOptions.InterruptParent.Run(func() error {
 		return execOptions.Run()
@@ -383,11 +406,18 @@ func (cmd *DebugCmd) Execute() {
 		log.Fatal(err)
 	}
 
+	tmpNamespaceManifest := cmd.prepareTemporaryNamespaceManifest()
+
+	tmpNamespace, err := kubeClient.CoreV1().Namespaces().Create(context.TODO(), tmpNamespaceManifest, metav1.CreateOptions{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	debugPodManifest := cmd.prepareDebugPodManifest(pod.Spec.NodeName, pod.Name, cmd.params.image)
 
 	log.Printf("Starting pod on node %s using image %s ...", pod.Spec.NodeName, cmd.params.image)
 
-	debugPod, err := kubeClient.CoreV1().Pods(currentNamespace).Create(context.TODO(), debugPodManifest, metav1.CreateOptions{})
+	debugPod, err := kubeClient.CoreV1().Pods(tmpNamespace.Name).Create(context.TODO(), debugPodManifest, metav1.CreateOptions{})
 	if err != nil {
 		log.Fatal(err)
 	}
