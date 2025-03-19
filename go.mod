@@ -1,6 +1,8 @@
 module kubectl-debugpod
 
-go 1.20
+go 1.23.0
+
+toolchain go1.24.1
 
 require (
 	github.com/shurcooL/vfsgen v0.0.0-20200824052919-0d455de96546
