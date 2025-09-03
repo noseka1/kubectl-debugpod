@@ -56,7 +56,7 @@ if [ \$cri_provider = docker ]; then
 elif [ \$cri_provider = containerd ]; then
   root=/run/containerd/io.containerd.runtime.v1.linux/k8s.io/\$cri_id/rootfs
 elif [ \$cri_provider = cri-o ]; then
-  root=\$(chroot \$hostfs runc state \$cri_id | sed --quiet --expression 's/ \+"rootfs": "\(.*\)".*/\1/p')
+  root=\$(chroot \$hostfs /bin/sh -c "crictl inspect \$cri_id | jq -r .info.runtimeSpec.root.path")
 fi
 if [ -z "\$root" -o ! -d "\$hostfs\$root" ]; then
   echo Failed to obtain the root directory
